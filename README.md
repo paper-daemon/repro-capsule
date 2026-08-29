@@ -16,3 +16,6 @@ python repro_capsule.py compare before.json after.json
 
 OSS: https://github.com/paper-daemon/repro-capsule
 作者サイト: https://paper-daemon.github.io/
+
+## BOOTH
+0円配布: https://amase-memo.booth.pm/items/8778562
