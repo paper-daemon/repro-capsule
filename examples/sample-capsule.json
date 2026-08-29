@@ -1,0 +1,79 @@
+{
+  "system": {
+    "platform": "Linux-7.1.9-100.fc43.x86_64-x86_64-with-glibc2.42",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "executable": "/usr/bin/python3"
+  },
+  "tools": {
+    "python": {
+      "ok": true,
+      "out": "Python 3.14.7"
+    },
+    "git": {
+      "ok": true,
+      "out": "git version 2.55.0"
+    },
+    "node": {
+      "ok": true,
+      "out": "v22.22.2"
+    },
+    "npm": {
+      "ok": true,
+      "out": "10.9.7"
+    },
+    "docker": {
+      "ok": true,
+      "out": "Docker version 29.6.2, build 1.fc43"
+    }
+  },
+  "git": {
+    "present": true,
+    "head": "8261f7633e34a35e6d1d3e925a74d7c61b917f48",
+    "branch": "main",
+    "dirty": false,
+    "status_preview": []
+  },
+  "manifests": {},
+  "environment": {
+    "ANDROID_HOME": "<present>",
+    "ANDROID_SDK_ROOT": "<present>",
+    "BASH_FUNC__module_raw%%": "<present>",
+    "BASH_FUNC_ml%%": "<present>",
+    "BASH_FUNC_module%%": "<present>",
+    "DC_REMOTE_DEVICE": "<present>",
+    "DEBUGINFOD_IMA_CERT_PATH": "<present>",
+    "DEBUGINFOD_URLS": "<present>",
+    "EDITOR": "<present>",
+    "GEMINI_API_KEY": "<redacted>",
+    "GPG_TTY": "<present>",
+    "HISTCONTROL": "<present>",
+    "HISTSIZE": "<present>",
+    "HOME": "<present>",
+    "HOSTNAME": "<present>",
+    "JAVA_HOME": "<present>",
+    "LANG": "<present>",
+    "LESSOPEN": "<present>",
+    "LOADEDMODULES": "<present>",
+    "LOGNAME": "<present>",
+    "MAIL": "<present>",
+    "MANPATH": "<present>",
+    "MODULEPATH": "<present>",
+    "MODULESHOME": "<present>",
+    "MODULES_CMD": "<present>",
+    "MODULES_RUN_QUARANTINE": "<present>",
+    "MOZ_GMP_PATH": "<present>",
+    "OLDPWD": "<present>",
+    "PATH": "<present>",
+    "PWD": "<present>",
+    "SHELL": "<present>",
+    "SHLVL": "<present>",
+    "TERM": "<present>",
+    "USER": "<present>",
+    "UV_THREADPOOL_SIZE": "<present>",
+    "XDG_DATA_DIRS": "<present>",
+    "_": "<present>",
+    "__MODULES_LMINIT": "<present>",
+    "__MODULES_SHARE_MANPATH": "<present>"
+  }
+}
