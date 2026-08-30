@@ -4,10 +4,15 @@ from urllib.parse import urlsplit, parse_qsl
 from pathlib import Path
 
 SECRET_KEYS=('TOKEN','SECRET','PASSWORD','PASSWD','API_KEY','APIKEY','AUTH','COOKIE','CREDENTIAL')
+SIGNED_QUERY_KEYS={'sig','signature','x-amz-signature','x-goog-signature'}
 MANIFEST_NAMES=('requirements.txt','requirements-dev.txt','pyproject.toml','poetry.lock','package.json','package-lock.json','pnpm-lock.yaml','yarn.lock','Dockerfile','.python-version')
 
 def secret_key(name):
     return any(x in str(name).upper() for x in SECRET_KEYS)
+
+def secret_query_key(name):
+    key=str(name).strip().lower()
+    return secret_key(key) or key in SIGNED_QUERY_KEYS
 
 def secret_url_value(value):
     try:
@@ -18,7 +23,7 @@ def secret_url_value(value):
         return False
     if parsed.netloc and '@' in parsed.netloc:
         return True
-    return any(secret_key(k) for k,_ in parse_qsl(parsed.query,keep_blank_values=True))
+    return any(secret_query_key(k) for k,_ in parse_qsl(parsed.query,keep_blank_values=True))
 
 def run(cmd,cwd=None):
     try:
@@ -121,7 +126,6 @@ def render(data, drift=None):
         'table{width:100%;border-collapse:collapse;background:#fffaf2}td{padding:10px;border-bottom:1px solid #ddd;vertical-align:top}'
         'pre{white-space:pre-wrap;margin:0}</style><h1>Repro Capsule</h1>'+drift_html+'<table>'+rows+'</table>'
     )
-
 def main():
     ap=argparse.ArgumentParser(); sub=ap.add_subparsers(dest='cmd',required=True)
     c=sub.add_parser('capture'); c.add_argument('repo',nargs='?',default='.'); c.add_argument('--json',default='repro-capsule.json'); c.add_argument('--html',default='repro-capsule.html'); c.add_argument('--include-env-values',action='store_true')
