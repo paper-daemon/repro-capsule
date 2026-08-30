@@ -55,6 +55,24 @@ class T(unittest.TestCase):
                 if v is None: os.environ.pop(k,None)
                 else: os.environ[k]=v
 
+    def test_signed_url_query_values_are_redacted(self):
+        keys=('AZURE_SAS_URL','GENERIC_SIGNED_URL','AWS_SIGNED_URL','GOOGLE_SIGNED_URL','PUBLIC_URL')
+        original={k:os.environ.get(k) for k in keys}
+        os.environ['AZURE_SAS_URL']='https://blob.example/file?sv=1&sig=synthetic-signature'
+        os.environ['GENERIC_SIGNED_URL']='https://download.example/file?signature=synthetic-signature'
+        os.environ['AWS_SIGNED_URL']='https://s3.example/file?X-Amz-Signature=synthetic-signature'
+        os.environ['GOOGLE_SIGNED_URL']='https://storage.example/file?X-Goog-Signature=synthetic-signature'
+        os.environ['PUBLIC_URL']='https://download.example/file?mode=public'
+        try:
+            snap=env_snapshot(True)
+            for key in keys[:-1]:
+                self.assertEqual(snap[key],'<redacted>')
+            self.assertEqual(snap['PUBLIC_URL'],'https://download.example/file?mode=public')
+        finally:
+            for k,v in original.items():
+                if v is None: os.environ.pop(k,None)
+                else: os.environ[k]=v
+
     def test_capture_ignores_only_its_own_output_paths(self):
         d=Path(tempfile.mkdtemp())
         subprocess.run(['git','init','-q'],cwd=d,check=True)
