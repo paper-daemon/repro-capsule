@@ -27,3 +27,6 @@ OSS: https://github.com/paper-daemon/repro-capsule
 
 ## BOOTH
 0円配布: https://amase-memo.booth.pm/items/8778562
+
+## Git snapshot boundary
+- capture時に指定したJSON/HTML出力はgit dirty判定から除外し、ツール自身の出力で次回captureがdirtyになる自己汚染を防ぎます。
