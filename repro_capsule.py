@@ -14,9 +14,9 @@ def secret_url_value(value):
         parsed=urlsplit(str(value))
     except ValueError:
         return False
-    if not parsed.scheme or not parsed.netloc:
+    if not parsed.scheme:
         return False
-    if '@' in parsed.netloc:
+    if parsed.netloc and '@' in parsed.netloc:
         return True
     return any(secret_key(k) for k,_ in parse_qsl(parsed.query,keep_blank_values=True))
 
