@@ -51,13 +51,18 @@ def tool_versions():
     }
     return {k:run(v) for k,v in probes.items() if shutil.which(v[0])}
 
-def git_snapshot(repo):
-    repo=Path(repo)
+def git_snapshot(repo, ignore_paths=None):
+    repo=Path(repo).resolve()
     if not (repo/'.git').exists():
         return {'present':False}
     head=run(['git','rev-parse','HEAD'],repo)
     branch=run(['git','branch','--show-current'],repo)
-    status=run(['git','status','--short'],repo)
+    status_cmd=['git','status','--short','--','.']
+    for candidate in ignore_paths or []:
+        try: rel=Path(candidate).resolve().relative_to(repo)
+        except ValueError: continue
+        status_cmd.append(f':(exclude){rel.as_posix()}')
+    status=run(status_cmd,repo)
     return {
         'present':True,
         'head':head['out'],
@@ -75,7 +80,7 @@ def manifests(repo):
         if p.exists() and p.is_file():
             out[name]={'sha256':sha(p),'size':p.stat().st_size}
     return out
-def capture(repo='.', include_env_values=False):
+def capture(repo='.', include_env_values=False, ignore_paths=None):
     return {
         'system':{
             'platform':platform.platform(),
@@ -84,7 +89,7 @@ def capture(repo='.', include_env_values=False):
             'executable':os.sys.executable,
         },
         'tools':tool_versions(),
-        'git':git_snapshot(repo),
+        'git':git_snapshot(repo,ignore_paths),
         'manifests':manifests(repo),
         'environment':env_snapshot(include_env_values),
     }
@@ -115,7 +120,7 @@ def main():
     d=sub.add_parser('compare'); d.add_argument('before'); d.add_argument('after'); d.add_argument('--html',default='repro-drift.html')
     a=ap.parse_args()
     if a.cmd=='capture':
-        data=capture(a.repo,a.include_env_values)
+        data=capture(a.repo,a.include_env_values,[Path(a.json),Path(a.html)])
         Path(a.json).write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
         Path(a.html).write_text(render(data),encoding='utf-8')
         print(f"branch={data['git'].get('branch','-')} dirty={data['git'].get('dirty','-')} manifests={len(data['manifests'])}")
