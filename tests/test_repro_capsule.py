@@ -57,3 +57,20 @@ class T(unittest.TestCase):
         self.assertIn('real-untracked.txt',preview)
         self.assertNotIn('repro-capsule.json',preview)
         self.assertNotIn('repro-capsule.html',preview)
+
+    def test_missing_or_file_repo_root_is_rejected(self):
+        base=Path(tempfile.mkdtemp())
+        missing=base/'missing'
+        with self.assertRaisesRegex(FileNotFoundError,'repo path not found'):
+            capture(missing)
+        file_root=base/'project.txt'; file_root.write_text('not a directory')
+        with self.assertRaisesRegex(NotADirectoryError,'not a directory'):
+            capture(file_root)
+
+    def test_cli_missing_root_fails_before_writing_outputs(self):
+        base=Path(tempfile.mkdtemp())
+        missing=base/'missing'; json_out=base/'out.json'; html_out=base/'out.html'
+        cp=subprocess.run([os.sys.executable,'repro_capsule.py','capture',str(missing),'--json',str(json_out),'--html',str(html_out)],text=True,capture_output=True)
+        self.assertEqual(cp.returncode,2)
+        self.assertIn('repo path not found',cp.stderr)
+        self.assertFalse(json_out.exists()); self.assertFalse(html_out.exists())
