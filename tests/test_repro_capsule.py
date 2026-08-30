@@ -1,6 +1,6 @@
-import unittest, tempfile, os
+import unittest, tempfile, os, subprocess
 from pathlib import Path
-from repro_capsule import env_snapshot, manifests, compare
+from repro_capsule import env_snapshot, manifests, compare, capture
 
 class T(unittest.TestCase):
     def test_redaction_manifest_compare(self):
@@ -37,3 +37,23 @@ class T(unittest.TestCase):
             for k,v in original.items():
                 if v is None: os.environ.pop(k,None)
                 else: os.environ[k]=v
+
+    def test_capture_ignores_only_its_own_output_paths(self):
+        d=Path(tempfile.mkdtemp())
+        subprocess.run(['git','init','-q'],cwd=d,check=True)
+        subprocess.run(['git','config','user.name','test'],cwd=d,check=True)
+        subprocess.run(['git','config','user.email','test@example.invalid'],cwd=d,check=True)
+        (d/'README.md').write_text('demo\n')
+        subprocess.run(['git','add','README.md'],cwd=d,check=True)
+        subprocess.run(['git','commit','-qm','init'],cwd=d,check=True)
+        json_out=d/'repro-capsule.json'; html_out=d/'repro-capsule.html'
+        json_out.write_text('{}'); html_out.write_text('<p>x</p>')
+        clean=capture(d,False,[json_out,html_out])
+        self.assertFalse(clean['git']['dirty'])
+        (d/'real-untracked.txt').write_text('keep visible')
+        dirty=capture(d,False,[json_out,html_out])
+        self.assertTrue(dirty['git']['dirty'])
+        preview='\n'.join(dirty['git']['status_preview'])
+        self.assertIn('real-untracked.txt',preview)
+        self.assertNotIn('repro-capsule.json',preview)
+        self.assertNotIn('repro-capsule.html',preview)
