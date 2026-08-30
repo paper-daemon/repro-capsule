@@ -38,6 +38,23 @@ class T(unittest.TestCase):
                 if v is None: os.environ.pop(k,None)
                 else: os.environ[k]=v
 
+    def test_scheme_urls_without_netloc_still_redact_secret_query_values(self):
+        original={k:os.environ.get(k) for k in ('LOCAL_DATABASE_URL','LOCAL_SQLITE_URL','LOCAL_FILE_URL','PUBLIC_FILE_URL')}
+        os.environ['LOCAL_DATABASE_URL']='postgresql:///localdb?password=synthetic-secret'
+        os.environ['LOCAL_SQLITE_URL']='sqlite:///tmp/demo.db?token=synthetic-token'
+        os.environ['LOCAL_FILE_URL']='file:///tmp/demo?api_key=synthetic-key'
+        os.environ['PUBLIC_FILE_URL']='file:///tmp/public.db?mode=ro'
+        try:
+            snap=env_snapshot(True)
+            self.assertEqual(snap['LOCAL_DATABASE_URL'],'<redacted>')
+            self.assertEqual(snap['LOCAL_SQLITE_URL'],'<redacted>')
+            self.assertEqual(snap['LOCAL_FILE_URL'],'<redacted>')
+            self.assertEqual(snap['PUBLIC_FILE_URL'],'file:///tmp/public.db?mode=ro')
+        finally:
+            for k,v in original.items():
+                if v is None: os.environ.pop(k,None)
+                else: os.environ[k]=v
+
     def test_capture_ignores_only_its_own_output_paths(self):
         d=Path(tempfile.mkdtemp())
         subprocess.run(['git','init','-q'],cwd=d,check=True)
