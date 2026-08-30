@@ -30,3 +30,7 @@ OSS: https://github.com/paper-daemon/repro-capsule
 
 ## Git snapshot boundary
 - capture時に指定したJSON/HTML出力はgit dirty判定から除外し、ツール自身の出力で次回captureがdirtyになる自己汚染を防ぎます。
+
+## Project root boundary
+
+`capture` は存在するディレクトリだけを対象にします。存在しないpathや通常ファイルをproject rootとして渡した場合は、空のcapsuleを正常生成せず、出力ファイルを書く前にエラー終了します。
