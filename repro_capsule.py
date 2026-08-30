@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, json, os, platform, shutil, subprocess, hashlib, html
+import argparse, json, os, platform, shutil, subprocess, hashlib, html, sys
 from urllib.parse import urlsplit, parse_qsl
 from pathlib import Path
 
@@ -41,6 +41,7 @@ def env_snapshot(include_values=False):
         else:
             out[k]='<present>'
     return out
+
 def tool_versions():
     probes={
         'python':['python3','--version'],
@@ -80,7 +81,13 @@ def manifests(repo):
         if p.exists() and p.is_file():
             out[name]={'sha256':sha(p),'size':p.stat().st_size}
     return out
+
 def capture(repo='.', include_env_values=False, ignore_paths=None):
+    repo=Path(repo).expanduser()
+    if not repo.exists():
+        raise FileNotFoundError(f'repo path not found: {repo}')
+    if not repo.is_dir():
+        raise NotADirectoryError(f'repo path is not a directory: {repo}')
     return {
         'system':{
             'platform':platform.platform(),
@@ -114,17 +121,24 @@ def render(data, drift=None):
         'table{width:100%;border-collapse:collapse;background:#fffaf2}td{padding:10px;border-bottom:1px solid #ddd;vertical-align:top}'
         'pre{white-space:pre-wrap;margin:0}</style><h1>Repro Capsule</h1>'+drift_html+'<table>'+rows+'</table>'
     )
+
 def main():
     ap=argparse.ArgumentParser(); sub=ap.add_subparsers(dest='cmd',required=True)
     c=sub.add_parser('capture'); c.add_argument('repo',nargs='?',default='.'); c.add_argument('--json',default='repro-capsule.json'); c.add_argument('--html',default='repro-capsule.html'); c.add_argument('--include-env-values',action='store_true')
     d=sub.add_parser('compare'); d.add_argument('before'); d.add_argument('after'); d.add_argument('--html',default='repro-drift.html')
     a=ap.parse_args()
     if a.cmd=='capture':
-        data=capture(a.repo,a.include_env_values,[Path(a.json),Path(a.html)])
+        try:
+            data=capture(a.repo,a.include_env_values,[Path(a.json),Path(a.html)])
+        except (FileNotFoundError, NotADirectoryError) as e:
+            print(f'ERROR: {e}',file=sys.stderr)
+            return 2
         Path(a.json).write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
         Path(a.html).write_text(render(data),encoding='utf-8')
         print(f"branch={data['git'].get('branch','-')} dirty={data['git'].get('dirty','-')} manifests={len(data['manifests'])}")
     else:
         before=json.loads(Path(a.before).read_text(encoding='utf-8')); after=json.loads(Path(a.after).read_text(encoding='utf-8'))
         drift=compare(before,after); Path(a.html).write_text(render(after,drift),encoding='utf-8'); print(f'drift_sections={len(drift)}')
-if __name__=='__main__': main()
+    return 0
+
+if __name__=='__main__': raise SystemExit(main())
