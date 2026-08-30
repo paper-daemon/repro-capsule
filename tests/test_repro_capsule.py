@@ -20,3 +20,20 @@ class T(unittest.TestCase):
         outside.write_text('outside dependency')
         (d/'requirements.txt').symlink_to(outside)
         self.assertNotIn('requirements.txt',manifests(d))
+
+    def test_credential_bearing_urls_are_always_redacted(self):
+        original={k:os.environ.get(k) for k in ('DATABASE_URL','REDIS_URL','PUBLIC_DOCS_URL','SERVICE_ENDPOINT')}
+        os.environ['DATABASE_URL']='postgresql://alice:supersecret@db.example:5432/app'
+        os.environ['REDIS_URL']='redis://:redispass@cache.example:6379/0'
+        os.environ['PUBLIC_DOCS_URL']='https://docs.example/public'
+        os.environ['SERVICE_ENDPOINT']='https://api.example/path?token=secret-query'
+        try:
+            snap=env_snapshot(True)
+            self.assertEqual(snap['DATABASE_URL'],'<redacted>')
+            self.assertEqual(snap['REDIS_URL'],'<redacted>')
+            self.assertEqual(snap['SERVICE_ENDPOINT'],'<redacted>')
+            self.assertEqual(snap['PUBLIC_DOCS_URL'],'https://docs.example/public')
+        finally:
+            for k,v in original.items():
+                if v is None: os.environ.pop(k,None)
+                else: os.environ[k]=v
