@@ -1,9 +1,24 @@
 #!/usr/bin/env python3
 import argparse, json, os, platform, shutil, subprocess, hashlib, html
+from urllib.parse import urlsplit, parse_qsl
 from pathlib import Path
 
 SECRET_KEYS=('TOKEN','SECRET','PASSWORD','PASSWD','API_KEY','APIKEY','AUTH','COOKIE','CREDENTIAL')
 MANIFEST_NAMES=('requirements.txt','requirements-dev.txt','pyproject.toml','poetry.lock','package.json','package-lock.json','pnpm-lock.yaml','yarn.lock','Dockerfile','.python-version')
+
+def secret_key(name):
+    return any(x in str(name).upper() for x in SECRET_KEYS)
+
+def secret_url_value(value):
+    try:
+        parsed=urlsplit(str(value))
+    except ValueError:
+        return False
+    if not parsed.scheme or not parsed.netloc:
+        return False
+    if '@' in parsed.netloc:
+        return True
+    return any(secret_key(k) for k,_ in parse_qsl(parsed.query,keep_blank_values=True))
 
 def run(cmd,cwd=None):
     try:
@@ -18,7 +33,7 @@ def sha(path):
 def env_snapshot(include_values=False):
     out={}
     for k,v in sorted(os.environ.items()):
-        secret=any(x in k.upper() for x in SECRET_KEYS)
+        secret=secret_key(k) or secret_url_value(v)
         if secret:
             out[k]='<redacted>'
         elif include_values:
