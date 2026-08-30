@@ -13,3 +13,10 @@ class T(unittest.TestCase):
         d=Path(tempfile.mkdtemp()); (d/'pyproject.toml').write_text('[project]\nname="x"')
         self.assertIn('pyproject.toml',manifests(d))
         self.assertEqual(compare({'system':1},{'system':2})[0]['section'],'system')
+
+    def test_manifest_symlink_outside_repo_is_skipped(self):
+        d=Path(tempfile.mkdtemp())
+        outside=Path(tempfile.mktemp())
+        outside.write_text('outside dependency')
+        (d/'requirements.txt').symlink_to(outside)
+        self.assertNotIn('requirements.txt',manifests(d))
