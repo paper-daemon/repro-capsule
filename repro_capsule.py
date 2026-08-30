@@ -55,6 +55,8 @@ def manifests(repo):
     repo=Path(repo); out={}
     for name in MANIFEST_NAMES:
         p=repo/name
+        if p.is_symlink():
+            continue
         if p.exists() and p.is_file():
             out[name]={'sha256':sha(p),'size':p.stat().st_size}
     return out
