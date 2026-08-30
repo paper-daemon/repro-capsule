@@ -8,11 +8,19 @@ python repro_capsule.py compare before.json after.json
 ```
 
 - token / secret / password / API key系の環境変数は常に伏せ字
+- `--include-env-values` 使用時も、`user:password@host` を含むURLや `token` / `secret` 等のquery parameterを持つURLは常に伏せ字
+- credentialを含まない通常の公開URLは `--include-env-values` 使用時に値を記録できます
 - デフォルトでは通常の環境変数も値を保存せず「存在」だけ記録
 - Git branch / HEAD / dirty状態を保存
 - pyproject / requirements / package lock / Dockerfile等をSHA256で固定
 - HTML + JSON レポート
 - Python 3.10+ / 外部依存なし / MIT
+
+回帰確認:
+
+```bash
+python3 -m unittest -v tests.test_repro_capsule
+```
 
 OSS: https://github.com/paper-daemon/repro-capsule
 作者サイト: https://paper-daemon.github.io/
